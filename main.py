@@ -1,26 +1,25 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import json
-import os
 
 app = FastAPI()
 
-# Enable CORS to allow requests from any origin
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+# ✅ Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
-# Correctly locate the JSON file
-json_path = os.path.join(os.path.dirname(__file__), "q-vercel-python.json")
-
-if os.path.exists(json_path):
-    with open(json_path, "r") as file:
-        student_marks = json.load(file)
-else:
-    student_marks = {}  # Default to empty dictionary if file is missing
+# ✅ Load student marks from JSON file
+with open("q-vercel-python.json", "r") as file:
+    student_marks = {student["name"]: student["marks"] for student in json.load(file)}
 
 @app.get("/api")
-def get_marks(name: list[str] = Query([])):
-    marks = [student_marks.get(n, 0) for n in name]
-    return {"marks": marks}
+def get_marks(name: list[str] = []):
+    return {"marks": [student_marks.get(n, 0) for n in name]}
 
 @app.get("/")
 def home():
